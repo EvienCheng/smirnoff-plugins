@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<SMIRNOFF version="0.3" aromaticity_model="OEAroModel_MDL">
+    <ImproperTorsionsHarmonic version="0.3" potential="(k/2)*(length-length_eq)**2">
+        <Improper smirks="[#6:1]=[#6:2]-[#7:3]-[#6:4]" length_eq="1.2 * angstrom ** 1" k="5.0 * kilocalorie ** 1 * mole ** -1 * angstrom ** -2"></Improper>
+    </ImproperTorsionsHarmonic>
+</SMIRNOFF>

@@ -16,13 +16,13 @@ from openff.toolkit.typing.engines.smirnoff.parameters import (
 )
 
 
-class ImproperTorsionHandler(ParameterHandler):
+class HarmonicImproperTorsionHandler(ParameterHandler):
     """Handle SMIRNOFF ``<ImproperTorsionForce>`` tags
 
     .. warning :: This API is experimental and subject to change.
     """
 
-    class ImproperTorsionType(ParameterType):
+    class HarmonicImproperTorsionType(ParameterType):
         """A SMIRNOFF torsion type for improper torsions.
 
         .. warning :: This API is experimental and subject to change.

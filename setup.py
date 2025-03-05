@@ -44,6 +44,7 @@ setup(
             "DampedExp6810Handler = smirnoff_plugins.handlers.nonbonded:DampedExp6810Handler",
             "AxilrodTellerHandler = smirnoff_plugins.handlers.nonbonded:AxilrodTellerHandler",
             "MultipoleHandler = smirnoff_plugins.handlers.nonbonded:MultipoleHandler",
+            "ImproperTorsionHandler = smirnoff_plugins.handlers.bonded:ImproperTorsionHandler",
             "DoubleExponentialVirtualSiteHandler = smirnoff_plugins.handlers.vsites:DoubleExponentialVirtualSiteHandler",
         ],
         "openff.interchange.plugins.collections": [

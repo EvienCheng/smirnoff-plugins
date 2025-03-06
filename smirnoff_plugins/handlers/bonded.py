@@ -1,6 +1,7 @@
 import abc
 
 from openff.toolkit import unit
+from openmm import CustomCompoundBondForce
 from openff.toolkit.typing.engines.smirnoff.parameters import (
     ElectrostaticsHandler,
     IncompatibleParameterError,
@@ -20,9 +21,22 @@ from openff.toolkit.typing.engines.smirnoff.parameters import (
 class _CustomBondedHandler(ParameterHandler, abc.ABC):
     """Base class for custom bonded parameter handlers (bonds, angles, torsions)."""
 
+    cutoff = ParameterAttribute(default=9.0 * unit.angstroms, unit=unit.angstrom)
+    
     periodicity = ParameterAttribute(
         default=1, converter=int
     )
+
+    periodic_method = ParameterAttribute(
+        default="cutoff", converter=_allow_only(["cutoff"])
+        )
+    
+    nonperiodic_method = ParameterAttribute(
+        default="no-cutoff", converter=_allow_only(["no-cutoff"])
+        )
+
+    switch_width = ParameterAttribute(default=1.0 * unit.angstroms, unit=unit.angstrom)
+
 
     def check_handler_compatibility(self, other_handler: ParameterHandler):
         """Checks whether this ParameterHandler encodes compatible physics as another
@@ -39,7 +53,7 @@ class _CustomBondedHandler(ParameterHandler, abc.ABC):
         IncompatibleParameterError if handler_kwargs are incompatible with existing
         parameters.
         """
-
+    
         if self.__class__ != other_handler.__class__:
             raise IncompatibleParameterError(
                 f"{self.__class__.__name__} and {other_handler.__class__.__name__} are not compatible."
@@ -56,7 +70,7 @@ class _CustomBondedHandler(ParameterHandler, abc.ABC):
 
 
 
-class ImproperTorsionHandler(_CustomBondedHandler):
+class HarmonicHeightHandler(_CustomBondedHandler):
 
     class HarmonicHeightType(ParameterType):
         """Defines parameters for harmonic height restraint."""

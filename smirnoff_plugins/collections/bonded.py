@@ -2,6 +2,7 @@ import math
 from typing import Dict, Iterable, Literal, Set, Tuple, Type, TypeVar, Union
 
 from openff.interchange import Interchange
+from openmm import CustomCompoundBondForce
 from openff.interchange.components.potentials import Potential
 from openff.interchange.exceptions import InvalidParameterHandlerError
 from openff.interchange.models import VirtualSiteKey
@@ -17,7 +18,7 @@ from openff.toolkit.typing.engines.smirnoff.parameters import ParameterHandler
 from openmm import CustomManyParticleForce, openmm
 
 from smirnoff_plugins.handlers.bonded import (
-    ImproperTorsionHandler
+    HarmonicHeightHandler
 )
 
 T = TypeVar("T", bound="_BondedPlugin")
@@ -53,7 +54,7 @@ class SMIRNOFFImproperTorsionCollection(SMIRNOFFCollection):
 
     @classmethod
     def allowed_parameter_handlers(cls):
-        return (ImproperTorsionHandler,)
+        return (HarmonicHeightHandler,)
 
     def modify_openmm_forces(self, interchange, system, *args):
         """Applies the improper torsion potential to an OpenMM system."""
@@ -77,10 +78,7 @@ class SMIRNOFFImproperTorsionCollection(SMIRNOFFCollection):
         system.addForce(force)
 
 
-class SMIRNOFFAxilrodTellerCollection(SMIRNOFFCollection):
-    """
-    Standard Axilrod-Teller potential from <https://aip.scitation.org/doi/10.1063/1.1723844>.
-    """
+class HarmonicHeightCollection(SMIRNOFFCollection):
 
     expression: str = (
         "0.5 * k * (h - h0)^2;"

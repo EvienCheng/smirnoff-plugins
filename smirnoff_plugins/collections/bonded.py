@@ -182,9 +182,9 @@ class LeeKrimmCollection(SMIRNOFFCollection):
 
     is_plugin: bool = True
     acts_as: str = ""
-    periodic_method: str = "cutoff-periodic"
-    nonperiodic_method: str = "cutoff-nonperiodic"
-    cutoff: unit.Quantity = unit.Quantity(0.9, unit.nanometer)
+    # periodic_method: str = "cutoff-periodic"
+    # nonperiodic_method: str = "cutoff-nonperiodic"
+    # cutoff: unit.Quantity = unit.Quantity(0.9, unit.nanometer)
 
     def store_potentials(self, parameter_handler):
         """Store height restraint parameters from the parameter handler."""
@@ -198,8 +198,10 @@ class LeeKrimmCollection(SMIRNOFFCollection):
 
             self.potentials[potential_key] = Potential(
                 parameters={
-                    "V2": parameter.V2, "V4": parameter.V4,
-                    "t": parameter.t, "s": parameter.s,
+                    "V2": parameter.V2, 
+                    "V4": parameter.V4,
+                    "t": parameter.t * unit.dimensionless, 
+                    "s": parameter.s * unit.dimensionless,
                 },
             )
 
@@ -240,8 +242,8 @@ class LeeKrimmCollection(SMIRNOFFCollection):
                 [
                     self.potentials[val].parameters["V2"].m_as("kilojoule_per_mole"),
                     self.potentials[val].parameters["V4"].m_as("kilojoule_per_mole"),
-                    self.potentials[val].parameters["t"].m_as("dimensionless"),
-                    self.potentials[val].parameters["s"].m_as("dimensionless"),
+                    self.potentials[val].parameters["t"],
+                    self.potentials[val].parameters["s"],
                 ],
             )
 
@@ -252,7 +254,7 @@ class LeeKrimmCollection(SMIRNOFFCollection):
         original_parameters: Dict[str, unit.Quantity],
     ) -> Dict[str, float]:
         """Converts the parameters to OpenMM-compatible units."""
-        _units = {"V2": unit.kilojoule_per_mole, "V4": unit.kilojoule_per_mole, "t":unit.dimensionless, "s": unit.dimensionless}
+        _units = {"V2": unit.kilojoule_per_mole, "V4": unit.kilojoule_per_mole, "t": unit.dimensionless, "s": unit.dimensionless}
 
         return {
             "V2": original_parameters["V2"].m_as(_units["V2"]),
@@ -295,7 +297,7 @@ class TwoMinimaCollection(SMIRNOFFCollection):
                 parameters={
                     "k1": parameter.k1,
                     "k2": parameter.k2,
-                    "periodicity": parameter.periodicity,
+                    "periodicity": parameter.periodicity * unit.dimensionless,
                     "phase": parameter.phase,
                 },
             )
@@ -337,7 +339,7 @@ class TwoMinimaCollection(SMIRNOFFCollection):
                 [
                     self.potentials[val].parameters["k1"].m_as("kilojoule_per_mole"),
                     self.potentials[val].parameters["k2"].m_as("kilojoule_per_mole"),
-                    self.potentials[val].parameters["periodicity"].m_as("1/radian"),
+                    self.potentials[val].parameters["periodicity"],
                     self.potentials[val].parameters["phase"].m_as("radian"),
                 ],
             )
@@ -349,11 +351,11 @@ class TwoMinimaCollection(SMIRNOFFCollection):
         original_parameters: Dict[str, unit.Quantity],
     ) -> Dict[str, float]:
         """Converts the parameters to OpenMM-compatible units."""
-        _units = {"k1": unit.kilojoule_per_mole, "k2": unit.kilojoule_per_mole, "periodicity": 1/unit.radian, "phase": unit.radian}
+        _units = {"k1": unit.kilojoule_per_mole, "k2": unit.kilojoule_per_mole, "phase": unit.radian, "periodicity": unit.dimensionless}
 
         return {
             "k1": original_parameters["k1"].m_as(_units["k1"]),
             "k2": original_parameters["k2"].m_as(_units["k2"]),
-            "periodicity": original_parameters["periodicity"].m_as("1/radian"),
+            "periodicity": original_parameters["periodicity"].m_as(_units["periodicity"]),
             "phase": original_parameters["phase"].m_as(_units["phase"]),
         }

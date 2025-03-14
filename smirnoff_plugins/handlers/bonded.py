@@ -182,8 +182,8 @@ class LeeKrimmHandler(_CustomBondedHandler):
         V4 = ParameterAttribute(
             default=None, unit=unit.kilojoule_per_mole
         )
-        t = ParameterAttribute(default=2.0, unit = unit.dimensionless)
-        s = ParameterAttribute(default=1.0, unit = unit.dimensionless)
+        t = ParameterAttribute(default=2.0)
+        s = ParameterAttribute(default=1.0)
 
     _TAGNAME = "LeeKrimm"
     _INFOTYPE = LeeKrimmType
@@ -219,8 +219,8 @@ class LeeKrimmHandler(_CustomBondedHandler):
                     atom_indices,
                     [V2.m_as(unit.kilojoule_per_mole),
                      V4.m_as(unit.kilojoule_per_mole),
-                     t.m_as(unit.dimensionless),
-                     s.m_as(unit.dimensionless)]
+                     t,
+                     s]
                 )
 
         system.addForce(force)
@@ -235,7 +235,7 @@ class TwoMinimaHandler(_CustomBondedHandler):
 
         k1 = ParameterAttribute(default=None, unit=unit.kilojoule_per_mole)
         k2 = ParameterAttribute(default=None, unit=unit.kilojoule_per_mole)
-        periodicity = ParameterAttribute(default=1.0)
+        periodicity = ParameterAttribute(default=1.0, converter = int)
         phase = ParameterAttribute(default=0.0, unit=unit.radian)
 
     _TAGNAME = "TwoMinima"

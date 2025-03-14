@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<SMIRNOFF version="0.3" aromaticity_model="OEAroModel_MDL">
+    <LeeKrimm version="0.3">
+        <ImproperTorsion smirks="[*:1]-[#7X3:2](-[*:3])-[*:4]" V2="10.0 * kilojoule_per_mole ** 1" V4="5.0 * kilojoule_per_mole ** 1" t="2.0 * dimensionless" s="1.0 * dimensionless"></ImproperTorsion>
+        <ImproperTorsion smirks="[#6X3:1]~[#7:2](~[#6X3:3])~[#1:4]" V2="50.0 * kilojoule_per_mole ** 1" V4="25.0 * kilojoule_per_mole ** 1" t="2.5 * dimensionless" s="1.2 * dimensionless"></ImproperTorsion>
+    </LeeKrimm>
+</SMIRNOFF>

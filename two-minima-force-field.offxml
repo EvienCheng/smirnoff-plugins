@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<SMIRNOFF version="0.3" aromaticity_model="OEAroModel_MDL">
+    <TwoMinima version="0.3">
+        <ImproperTorsion smirks="[*:1]-[#7X3:2](-[*:3])-[*:4]" k1="10.0 * kilojoule_per_mole ** 1" k2="5.0 * kilojoule_per_mole ** 1" periodicity="1" phase="0.0 * radian ** 1"></ImproperTorsion>
+        <ImproperTorsion smirks="[#6X3:1]~[#7:2](~[#6X3:3])~[#1:4]" k1="50.0 * kilojoule_per_mole ** 1" k2="25.0 * kilojoule_per_mole ** 1" periodicity="1" phase="0.0 * radian ** 1"></ImproperTorsion>
+    </TwoMinima>
+</SMIRNOFF>

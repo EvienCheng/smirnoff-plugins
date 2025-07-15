@@ -21,7 +21,7 @@ class _VsitePlugin(SMIRNOFFVirtualSiteCollection, abc.ABC):
     """
 
     is_plugin: bool = True
-    acts_as: Field("VirtualSites")
+    acts_as: str = "VirtualSites"
 
     @classmethod
     def supported_parameters(cls):

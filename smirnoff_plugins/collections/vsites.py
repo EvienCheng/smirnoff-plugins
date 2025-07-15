@@ -13,14 +13,15 @@ from openff.toolkit.typing.engines.smirnoff.parameters import VirtualSiteHandler
 
 from smirnoff_plugins.handlers.vsites import DoubleExponentialVirtualSiteHandler
 
+from pydantic import Field
 
 class _VsitePlugin(SMIRNOFFVirtualSiteCollection, abc.ABC):
     """
     A general vsite plugin class used to make vsite collections compatible with a non-bonded collection
     """
 
-    is_plugin = True
-    acts_as = "VirtualSites"
+    is_plugin: bool = True
+    acts_as: Field("VirtualSites")
 
     @classmethod
     def supported_parameters(cls):

@@ -40,6 +40,9 @@ setup(
     entry_points={
         "openff.toolkit.plugins.handlers": [
             "UreyBradleyHandler = smirnoff_plugins.handlers.valence:UreyBradleyHandler",
+            "HarmonicHeightHandler = smirnoff_plugins.handlers.valence:HarmonicHeightHandler",
+            "LeeKrimmHandler = smirnoff_plugins.handlers.valence:LeeKrimmHandler",
+            "TwoMinimaHandler = smirnoff_plugins.handlers.valence:TwoMinimaHandler",
             "DampedBuckingham68Handler = smirnoff_plugins.handlers.nonbonded:DampedBuckingham68Handler",
             "DoubleExponentialHandler = smirnoff_plugins.handlers.nonbonded:DoubleExponentialHandler",
             "DampedExp6810Handler = smirnoff_plugins.handlers.nonbonded:DampedExp6810Handler",
@@ -49,6 +52,9 @@ setup(
         ],
         "openff.interchange.plugins.collections": [
             "SMIRNOFFUreyBradleyCollection = smirnoff_plugins.collections.valence:SMIRNOFFUreyBradleyCollection",
+            "SMIRNOFFHarmonicHeightCollection = smirnoff_plugins.collections.valence:SMIRNOFFHarmonicHeightCollection",
+            "SMIRNOFFLeeKrimmCollection = smirnoff_plugins.collections.valence:SMIRNOFFLeeKrimmCollection",
+            "SMIRNOFFTwoMinimaCollection = smirnoff_plugins.collections.valence:SMIRNOFFTwoMinimaCollection",
             "SMIRNOFFDampedBuckingham68Collection = smirnoff_plugins.collections.nonbonded:SMIRNOFFDampedBuckingham68Collection",
             "DoubleExponentialCollection = smirnoff_plugins.collections.nonbonded:SMIRNOFFDoubleExponentialCollection",
             "SMIRNOFFDampedExp6810Collection = smirnoff_plugins.collections.nonbonded:SMIRNOFFDampedExp6810Collection",

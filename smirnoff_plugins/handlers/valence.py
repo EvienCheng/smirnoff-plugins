@@ -23,3 +23,51 @@ class UreyBradleyHandler(ParameterHandler):
     _TAGNAME = "UreyBradleys"
     _INFOTYPE = UreyBradleyType
     _DEPENDENCIES = [ConstraintHandler]
+
+class HarmonicHeightHandler(ParameterHandler):
+    """Handler for HarmonicHeight improper-like interactions."""
+
+    class HarmonicHeightType(ParameterType):
+        _ELEMENT_NAME = "HarmonicHeight"
+
+        smirks = ParameterAttribute()
+        id = ParameterAttribute()
+        k = ParameterAttribute(unit=unit.kilojoule_per_mole / unit.nanometer**2)
+        h0 = ParameterAttribute(unit=unit.nanometer)
+
+    _TAGNAME = "HarmonicHeights"
+    _INFOTYPE = HarmonicHeightType
+
+
+class LeeKrimmHandler(ParameterHandler):
+    """Handler for Lee-Krimm improper-like interactions."""
+
+    class LeeKrimmType(ParameterType):
+        _ELEMENT_NAME = "Improper" 
+
+        smirks = ParameterAttribute()
+        id = ParameterAttribute()       
+        V2 = ParameterAttribute(unit=unit.kilojoule_per_mole)
+        V4 = ParameterAttribute(unit=unit.kilojoule_per_mole)
+        t = ParameterAttribute(default=2.0)
+        s = ParameterAttribute(default=1.0)
+
+    _TAGNAME = "LeeKrimm"
+    _INFOTYPE = LeeKrimmType
+
+class TwoMinimaHandler(ParameterHandler):
+    """Handler for TwoMinima improper-like interactions."""
+
+    class TwoMinimaType(ParameterType):
+        _ELEMENT_NAME = "TwoMinima"
+
+        smirks = ParameterAttribute()
+        id = ParameterAttribute()
+        k1 = ParameterAttribute(unit=unit.kilojoule_per_mole)
+        k2 = ParameterAttribute(unit=unit.kilojoule_per_mole)
+        periodicity = ParameterAttribute(default=1, converter=int)
+        phase = ParameterAttribute(default=0.0, unit=unit.radian)
+
+    _TAGNAME = "TwoMinima"
+    _INFOTYPE = TwoMinimaType
+

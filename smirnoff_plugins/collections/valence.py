@@ -114,3 +114,213 @@ class SMIRNOFFUreyBradleyCollection(SMIRNOFFCollection):
                 length=length,
                 k=k,
             )
+
+from smirnoff_plugins.handlers.valence import HarmonicHeightHandler
+from typing import ClassVar
+
+class SMIRNOFFHarmonicHeightCollection(SMIRNOFFCollection):
+    is_plugin: ClassVar[bool] = True
+
+    type: ClassVar[Literal["HarmonicHeight"]] = "HarmonicHeight"
+
+    expression: ClassVar[str] = (
+        "0.5 * k * (h - h0)^2;"
+        "h = abs((Nx*(x2-x1) + Ny*(y2-y1) + Nz*(z2-z1)) / sqrt(Nx^2 + Ny^2 + Nz^2));"
+        "Nx = (y3 - y1)*(z4 - z1) - (z3 - z1)*(y4 - y1);"
+        "Ny = (z3 - z1)*(x4 - x1) - (x3 - x1)*(z4 - z1);"
+        "Nz = (x3 - x1)*(y4 - y1) - (y3 - y1)*(x4 - x1);"
+    )
+
+    @classmethod
+    def allowed_parameter_handlers(cls) -> Iterable[Type[ParameterHandler]]:
+        return (HarmonicHeightHandler,)
+
+    @classmethod
+    def supported_parameters(cls) -> Iterable[str]:
+        return "smirks", "id", "k", "h0"
+
+    @classmethod
+    def potential_parameters(cls) -> Iterable[str]:
+        return "k", "h0"
+
+    @classmethod
+    def valence_terms(cls, topology):
+        return topology.impropers
+
+    def store_potentials(self, parameter_handler: HarmonicHeightHandler) -> None:
+        for potential_key in self.key_map.values():
+            param = parameter_handler.parameters[potential_key.id]
+            self.potentials[potential_key] = Potential(
+                parameters={"k": param.k, "h0": param.h0}
+            )
+
+    def modify_openmm_forces(
+        self,
+        interchange: Interchange,
+        system: openmm.System,
+        add_constrained_forces: bool,
+        constrained_pairs: Set[Tuple[int, ...]],
+        particle_map: Dict[Union[int, VirtualSiteKey], int],
+    ) -> None:
+        force = openmm.CustomCompoundBondForce(
+            4,
+            self.expression
+        )
+        force.addPerBondParameter("k")
+        force.addPerBondParameter("h0")
+        force.setName("HarmonicHeight")
+        system.addForce(force)
+
+        for top_key, pot_key in self.key_map.items():
+            indices = [particle_map[i] for i in top_key.atom_indices]
+            params = self.potentials[pot_key].parameters
+            k = params["k"].m_as("kilojoule / mole / nanometer**2")
+            h0 = params["h0"].m_as("nanometer")
+
+            force.addBond(indices, [k, h0])
+
+from smirnoff_plugins.handlers.valence import LeeKrimmHandler
+
+class SMIRNOFFLeeKrimmCollection(SMIRNOFFCollection):
+    type: ClassVar[Literal["LeeKrimm"]] = "LeeKrimm"
+    is_plugin: ClassVar[bool] = True
+    acts_as: str = "ImproperTorsions"
+
+    expression: ClassVar[str] = (
+        "V2 * ((abs(h)^t) / (1 - abs(h)^s))^2 + "
+        "V4 * ((abs(h)^t) / (1 - abs(h)^s))^4;"
+        "h = abs((Nx*(x2-x1) + Ny*(y2-y1) + Nz*(z2-z1)) / sqrt(Nx^2 + Ny^2 + Nz^2));"
+        "Nx = (y3 - y1)*(z4 - z1) - (z3 - z1)*(y4 - y1);"
+        "Ny = (z3 - z1)*(x4 - x1) - (x3 - x1)*(z4 - z1);"
+        "Nz = (x3 - x1)*(y4 - y1) - (y3 - y1)*(x4 - x1);"
+    )
+
+    @classmethod
+    def allowed_parameter_handlers(cls):
+        from smirnoff_plugins.handlers.valence import LeeKrimmHandler
+        return (LeeKrimmHandler,)
+
+    @classmethod
+    def supported_parameters(cls) -> Iterable[str]:
+        return "smirks", "id", "V2", "V4", "t", "s"
+
+    @classmethod
+    def potential_parameters(cls) -> Iterable[str]:
+        return "V2", "V4", "t", "s"
+
+    def store_potentials(self, parameter_handler):
+        for potential_key in self.key_map.values():
+            param = parameter_handler.parameters[potential_key.id]
+            self.potentials[potential_key] = Potential(
+                parameters={
+                    "V2": param.V2,
+                    "V4": param.V4,
+                    "t": param.t * off_unit.dimensionless,
+                    "s": param.s * off_unit.dimensionless,
+                }
+            )
+
+    def modify_openmm_forces(
+        self,
+        interchange: Interchange,
+        system: openmm.System,
+        add_constrained_forces: bool,
+        constrained_pairs: Set[tuple[int, ...]],
+        particle_map: Dict[Union[int, VirtualSiteKey], int],
+    ) -> None:
+        force = openmm.CustomCompoundBondForce(4, self.expression)
+        force.addPerBondParameter("V2")
+        force.addPerBondParameter("V4")
+        force.addPerBondParameter("t")
+        force.addPerBondParameter("s")
+        force.setName("LeeKrimm")
+
+        for key, val in self.key_map.items():
+            atom_indices = [particle_map[i] for i in key.atom_indices]
+            params = self.potentials[val].parameters
+            force.addBond(
+                atom_indices,
+                [
+                    params["V2"].m_as("kilojoule / mole"),
+                    params["V4"].m_as("kilojoule / mole"),
+                    params["t"],
+                    params["s"],
+                ],
+            )
+
+        system.addForce(force)
+
+
+from smirnoff_plugins.handlers.valence import TwoMinimaHandler
+
+class SMIRNOFFTwoMinimaCollection(SMIRNOFFCollection):
+    type: ClassVar[Literal["TwoMinima"]] = "TwoMinima"
+    is_plugin: ClassVar[bool] = True
+    acts_as: str = "ImproperTorsions"
+
+
+    expression: ClassVar[str] = (
+        "k1 * (1 + cos(periodicity * theta - phase)) - "
+        "k2 * (1 + cos(2 * periodicity * theta + phase));"
+        "theta = acos(h_clamped);"
+        "h_clamped = min(1, max(-1, h));"
+        "h = (Nx*(x2-x1) + Ny*(y2-y1) + Nz*(z2-z1)) / sqrt(Nx^2 + Ny^2 + Nz^2);"
+        "Nx = (y3-y1)*(z4-z1) - (z3-z1)*(y4-y1);"
+        "Ny = (z3-z1)*(x4-x1) - (x3-x1)*(z4-z1);"
+        "Nz = (x3-x1)*(y4-y1) - (y3-y1)*(x4-x1);"
+    )
+
+    @classmethod
+    def allowed_parameter_handlers(cls):
+        from smirnoff_plugins.handlers.valence import TwoMinimaHandler
+        return (TwoMinimaHandler,)
+
+    @classmethod
+    def supported_parameters(cls):
+        return "smirks", "id", "k1", "k2", "periodicity", "phase"
+
+    @classmethod
+    def potential_parameters(cls):
+        return "k1", "k2", "periodicity", "phase"
+
+    def store_potentials(self, parameter_handler):
+        for potential_key in self.key_map.values():
+            param = parameter_handler.parameters[potential_key.id]
+            self.potentials[potential_key] = Potential(
+                parameters={
+                    "k1": param.k1,
+                    "k2": param.k2,
+                    "periodicity": param.periodicity * off_unit.dimensionless,
+                    "phase": param.phase,
+                }
+            )
+
+    def modify_openmm_forces(
+        self,
+        interchange,
+        system,
+        add_constrained_forces: bool,
+        constrained_pairs: Set[Tuple[int, ...]],
+        particle_map: Dict[Union[int, "VirtualSiteKey"], int],
+    ):
+        force = openmm.CustomCompoundBondForce(4, self.expression)
+        force.addPerBondParameter("k1")
+        force.addPerBondParameter("k2")
+        force.addPerBondParameter("periodicity")
+        force.addPerBondParameter("phase")
+        force.setName("TwoMinima")
+
+        for key, val in self.key_map.items():
+            atom_indices = [particle_map[i] for i in key.atom_indices]
+            params = self.potentials[val].parameters
+            force.addBond(
+                atom_indices,
+                [
+                    params["k1"].m_as("kilojoule / mole"),
+                    params["k2"].m_as("kilojoule / mole"),
+                    params["periodicity"],
+                    params["phase"].m_as("radian"),
+                ],
+            )
+
+        system.addForce(force)

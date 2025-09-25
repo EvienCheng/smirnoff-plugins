@@ -38,6 +38,20 @@ class HarmonicHeightHandler(ParameterHandler):
     _TAGNAME = "HarmonicHeights"
     _INFOTYPE = HarmonicHeightType
 
+class HarmonicAngleHandler(ParameterHandler):
+    """Handler for HarmonicAngle improper-like interactions."""
+
+    class HarmonicAngleType(ParameterType):
+        _ELEMENT_NAME = "HarmonicAngle"
+
+        smirks = ParameterAttribute()
+        id = ParameterAttribute()
+        k = ParameterAttribute(unit=unit.kilocalorie_per_mole / unit.radians**2)
+        theta0 = ParameterAttribute(unit=unit.radians)
+
+    _TAGNAME = "HarmonicAngle"
+    _INFOTYPE = HarmonicAngleType
+
 
 class LeeKrimmHandler(ParameterHandler):
     """Handler for Lee-Krimm improper-like interactions."""

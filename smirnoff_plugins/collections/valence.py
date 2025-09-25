@@ -145,14 +145,44 @@ class SMIRNOFFHarmonicHeightCollection(SMIRNOFFCollection):
 
     @classmethod
     def valence_terms(cls, topology):
-        return topology.impropers
+        unique_terms = []
+        seen = set()
+        for improper in topology.impropers:
+            atoms = tuple(improper)
+            central = atoms[1]
+            others = sorted([atoms[0], atoms[2], atoms[3]])
+            canonical = (others[0], central, others[1], others[2])
+            if canonical not in seen:
+                seen.add(canonical)
+                unique_terms.append(canonical)
+        return unique_terms
+    
+    # def store_potentials(self, parameter_handler: HarmonicHeightHandler) -> None:
+    #     # for potential_key in self.key_map.values():
+    #     #     param = parameter_handler.parameters[potential_key.id]
+    #     #     self.potentials[potential_key] = Potential(
+    #     #         parameters={"k": param.k, "h0": param.h0}
+    #     #     )
 
     def store_potentials(self, parameter_handler: HarmonicHeightHandler) -> None:
+        seen_params = {}
+
         for potential_key in self.key_map.values():
             param = parameter_handler.parameters[potential_key.id]
-            self.potentials[potential_key] = Potential(
-                parameters={"k": param.k, "h0": param.h0}
+
+            key_tuple = tuple(
+                getattr(param, pname).m_as(unit) if hasattr(getattr(param, pname), "m_as") else getattr(param, pname)
+                for pname, unit in [("k", "kilojoule / mole / nanometer**2"), ("h0", "nanometer")]
             )
+
+            if key_tuple not in seen_params:
+                seen_params[key_tuple] = Potential(
+                    parameters={pname: getattr(param, pname) for pname in self.potential_parameters()}
+                )
+
+            self.potentials[potential_key] = seen_params[key_tuple]
+
+
 
     def modify_openmm_forces(
         self,
@@ -184,7 +214,7 @@ from smirnoff_plugins.handlers.valence import LeeKrimmHandler
 class SMIRNOFFLeeKrimmCollection(SMIRNOFFCollection):
     type: ClassVar[Literal["LeeKrimm"]] = "LeeKrimm"
     is_plugin: ClassVar[bool] = True
-    acts_as: str = "ImproperTorsions"
+    acts_as: str = "LeeKrimm"
 
     expression: ClassVar[str] = (
         "V2 * ((abs(h)^t) / (1 - abs(h)^s))^2 + "
@@ -207,6 +237,10 @@ class SMIRNOFFLeeKrimmCollection(SMIRNOFFCollection):
     @classmethod
     def potential_parameters(cls) -> Iterable[str]:
         return "V2", "V4", "t", "s"
+    
+    @classmethod
+    def valence_terms(cls, topology):
+        return topology.impropers
 
     def store_potentials(self, parameter_handler):
         for potential_key in self.key_map.values():
@@ -256,7 +290,7 @@ from smirnoff_plugins.handlers.valence import TwoMinimaHandler
 class SMIRNOFFTwoMinimaCollection(SMIRNOFFCollection):
     type: ClassVar[Literal["TwoMinima"]] = "TwoMinima"
     is_plugin: ClassVar[bool] = True
-    acts_as: str = "ImproperTorsions"
+    acts_as: str = "TwoMinima"
 
 
     expression: ClassVar[str] = (
@@ -282,7 +316,12 @@ class SMIRNOFFTwoMinimaCollection(SMIRNOFFCollection):
     @classmethod
     def potential_parameters(cls):
         return "k1", "k2", "periodicity", "phase"
-
+    
+    @classmethod
+    def valence_terms(cls, topology):
+        return topology.impropers
+    
+    
     def store_potentials(self, parameter_handler):
         for potential_key in self.key_map.values():
             param = parameter_handler.parameters[potential_key.id]
@@ -294,6 +333,7 @@ class SMIRNOFFTwoMinimaCollection(SMIRNOFFCollection):
                     "phase": param.phase,
                 }
             )
+
 
     def modify_openmm_forces(
         self,
@@ -324,3 +364,79 @@ class SMIRNOFFTwoMinimaCollection(SMIRNOFFCollection):
             )
 
         system.addForce(force)
+    
+from smirnoff_plugins.handlers.valence import HarmonicAngleHandler
+
+class SMIRNOFFHarmonicAngleCollection(SMIRNOFFCollection):
+    is_plugin: ClassVar[bool] = True
+    type: ClassVar[str] = "HarmonicAngle"
+
+    expression: ClassVar[str] = "0.5 * k * (theta - theta0)^2;"
+
+    @classmethod
+    def allowed_parameter_handlers(cls) -> Iterable[Type[ParameterHandler]]:
+        return (HarmonicAngleHandler,)
+
+    @classmethod
+    def supported_parameters(cls) -> Iterable[str]:
+        return "smirks", "id", "k", "theta0"
+
+    @classmethod
+    def potential_parameters(cls) -> Iterable[str]:
+        return "k", "theta0"
+
+    @classmethod
+    def valence_terms(cls, topology):
+        """Return all unique angle tuples in canonical order: (atom1, central, atom2)."""
+        unique_terms = []
+        seen = set()
+        for angle in topology.angles:
+            central = angle[1]
+            others = tuple(sorted([angle[0], angle[2]]))
+            canonical = (others[0], central, others[1])
+            if canonical not in seen:
+                seen.add(canonical)
+                unique_terms.append(canonical)
+        return unique_terms
+
+    def store_potentials(self, parameter_handler: HarmonicAngleHandler) -> None:
+        seen_params = {}
+
+        for potential_key in self.key_map.values():
+            param = parameter_handler.parameters[potential_key.id]
+
+            key_tuple = (
+                param.k.m_as("kilojoule / mole / radian**2") 
+                if hasattr(param.k, "m_as") else param.k,
+                param.theta0.m_as("radian") 
+                if hasattr(param.theta0, "m_as") else param.theta0,
+            )
+
+            if key_tuple not in seen_params:
+                seen_params[key_tuple] = Potential(
+                    parameters={pname: getattr(param, pname) for pname in self.potential_parameters()}
+                )
+
+            self.potentials[potential_key] = seen_params[key_tuple]
+
+    def modify_openmm_forces(
+        self,
+        interchange: Interchange,
+        system: openmm.System,
+        add_constrained_forces: bool,
+        constrained_pairs: Set[Tuple[int, ...]],
+        particle_map: Dict[Union[int, VirtualSiteKey], int],
+    ) -> None:
+        """Add a harmonic angle force to OpenMM."""
+        force = openmm.CustomAngleForce(self.expression)
+        force.addPerAngleParameter("k")
+        force.addPerAngleParameter("theta0")
+        force.setName("HarmonicAngle")
+        system.addForce(force)
+
+        for top_key, pot_key in self.key_map.items():
+            indices = [particle_map[i] for i in top_key.atom_indices]
+            params = self.potentials[pot_key].parameters
+            k = params["k"].m_as("kilojoule / mole / radian**2")
+            theta0 = params["theta0"].m_as("radian")
+            force.addAngle(indices[0], indices[1], indices[2], [k, theta0])

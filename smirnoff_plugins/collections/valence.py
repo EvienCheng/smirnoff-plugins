@@ -145,44 +145,17 @@ class SMIRNOFFHarmonicHeightCollection(SMIRNOFFCollection):
 
     @classmethod
     def valence_terms(cls, topology):
-        unique_terms = []
-        seen = set()
-        for improper in topology.impropers:
-            atoms = tuple(improper)
-            central = atoms[1]
-            others = sorted([atoms[0], atoms[2], atoms[3]])
-            canonical = (others[0], central, others[1], others[2])
-            if canonical not in seen:
-                seen.add(canonical)
-                unique_terms.append(canonical)
-        return unique_terms
-    
-    # def store_potentials(self, parameter_handler: HarmonicHeightHandler) -> None:
-    #     # for potential_key in self.key_map.values():
-    #     #     param = parameter_handler.parameters[potential_key.id]
-    #     #     self.potentials[potential_key] = Potential(
-    #     #         parameters={"k": param.k, "h0": param.h0}
-    #     #     )
+        return topology.impropers
 
-    def store_potentials(self, parameter_handler: HarmonicHeightHandler) -> None:
-        seen_params = {}
-
+    def store_potentials(self, parameter_handler):
         for potential_key in self.key_map.values():
             param = parameter_handler.parameters[potential_key.id]
-
-            key_tuple = tuple(
-                getattr(param, pname).m_as(unit) if hasattr(getattr(param, pname), "m_as") else getattr(param, pname)
-                for pname, unit in [("k", "kilojoule / mole / nanometer**2"), ("h0", "nanometer")]
+            self.potentials[potential_key] = Potential(
+                parameters={
+                    "k": param.k,
+                    "h0": param.h0,
+                }
             )
-
-            if key_tuple not in seen_params:
-                seen_params[key_tuple] = Potential(
-                    parameters={pname: getattr(param, pname) for pname in self.potential_parameters()}
-                )
-
-            self.potentials[potential_key] = seen_params[key_tuple]
-
-
 
     def modify_openmm_forces(
         self,

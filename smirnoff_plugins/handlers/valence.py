@@ -38,6 +38,10 @@ class HarmonicHeightHandler(ParameterHandler):
     _TAGNAME = "HarmonicHeights"
     _INFOTYPE = HarmonicHeightType
 
+    def find_matches(self, entity, unique=True):
+        """Find the HarmonicHeight matches in the topology/molecule."""
+        return self._find_matches(entity, unique=unique)
+
 class HarmonicAngleHandler(ParameterHandler):
     """Handler for HarmonicAngle improper-like interactions."""
 
@@ -51,6 +55,11 @@ class HarmonicAngleHandler(ParameterHandler):
 
     _TAGNAME = "HarmonicAngle"
     _INFOTYPE = HarmonicAngleType
+
+    def find_matches(self, entity, unique=True):
+        """Find the HarmonicAngle matches in the topology/molecule."""
+        return self._find_matches(entity, unique=unique)
+
 
 
 class LeeKrimmHandler(ParameterHandler):
@@ -69,6 +78,11 @@ class LeeKrimmHandler(ParameterHandler):
     _TAGNAME = "LeeKrimm"
     _INFOTYPE = LeeKrimmType
 
+    def find_matches(self, entity, unique=True):
+        """Find the LeeKrimm matches in the topology/molecule."""
+        return self._find_matches(entity, unique=unique)
+
+
 class TwoMinimaHandler(ParameterHandler):
     """Handler for TwoMinima improper-like interactions."""
 
@@ -85,3 +99,6 @@ class TwoMinimaHandler(ParameterHandler):
     _TAGNAME = "TwoMinima"
     _INFOTYPE = TwoMinimaType
 
+    def find_matches(self, entity, unique=True):
+        """Find the TwoMinima matches in the topology/molecule."""
+        return self._find_matches(entity, unique=unique)

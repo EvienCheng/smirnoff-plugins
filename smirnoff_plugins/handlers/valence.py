@@ -24,13 +24,16 @@ class UreyBradleyHandler(ParameterHandler):
     _INFOTYPE = UreyBradleyType
     _DEPENDENCIES = [ConstraintHandler]
 
+
 class HarmonicHeightHandler(ParameterHandler):
     """Handler for HarmonicHeight improper-like interactions."""
 
     class HarmonicHeightType(ParameterType):
         _ELEMENT_NAME = "HarmonicHeight"
 
-        k = ParameterAttribute(default=None, unit=unit.kilojoule_per_mole / unit.nanometer**2)
+        k = ParameterAttribute(
+            default=None, unit=unit.kilojoule_per_mole / unit.nanometer**2
+        )
         h0 = ParameterAttribute(default=None, unit=unit.nanometer)
 
     _TAGNAME = "HarmonicHeights"
@@ -43,7 +46,9 @@ class HarmonicAngleHandler(ParameterHandler):
     class HarmonicAngleType(ParameterType):
         _ELEMENT_NAME = "HarmonicAngle"
 
-        k = ParameterAttribute(default=None, unit=unit.kilocalorie_per_mole / unit.radians**2)
+        k = ParameterAttribute(
+            default=None, unit=unit.kilocalorie_per_mole / unit.radians**2
+        )
         theta0 = ParameterAttribute(default=None, unit=unit.radians)
 
     _TAGNAME = "HarmonicAngle"
@@ -54,7 +59,7 @@ class LeeKrimmHandler(ParameterHandler):
     """Handler for Lee-Krimm improper-like interactions."""
 
     class LeeKrimmType(ParameterType):
-        _ELEMENT_NAME = "LeeKrimm" 
+        _ELEMENT_NAME = "LeeKrimm"
 
         V2 = ParameterAttribute(unit=unit.kilojoule_per_mole)
         V4 = ParameterAttribute(unit=unit.kilojoule_per_mole)

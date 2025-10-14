@@ -11,7 +11,12 @@ from openff.toolkit import unit as off_unit
 from openff.toolkit.typing.engines.smirnoff.parameters import ParameterHandler
 from openmm import openmm
 
-from smirnoff_plugins.handlers.valence import UreyBradleyHandler
+from smirnoff_plugins.handlers.valence import (
+    HarmonicAngleHandler,
+    HarmonicHeightHandler,
+    LeeKrimmHandler,
+    UreyBradleyHandler,
+)
 
 
 @lru_cache
@@ -115,21 +120,13 @@ class SMIRNOFFUreyBradleyCollection(SMIRNOFFCollection):
                 k=k,
             )
 
-from smirnoff_plugins.handlers.valence import HarmonicHeightHandler
-from typing import ClassVar
 
 class SMIRNOFFHarmonicHeightCollection(SMIRNOFFCollection):
-    is_plugin: ClassVar[bool] = True
+    is_plugin: bool = True
 
-    type: ClassVar[Literal["HarmonicHeight"]] = "HarmonicHeight"
+    type: Literal["HarmonicHeight"] = "HarmonicHeight"
 
-    expression: ClassVar[str] = (
-        "0.5 * k * (h - h0)^2;"
-        "h = abs((Nx*(x2-x1) + Ny*(y2-y1) + Nz*(z2-z1)) / sqrt(Nx^2 + Ny^2 + Nz^2));"
-        "Nx = (y3 - y1)*(z4 - z1) - (z3 - z1)*(y4 - y1);"
-        "Ny = (z3 - z1)*(x4 - x1) - (x3 - x1)*(z4 - z1);"
-        "Nz = (x3 - x1)*(y4 - y1) - (y3 - y1)*(x4 - x1);"
-    )
+    expression: Literal["0.5 * k * (h - h0)^2"] = "0.5 * k * (h - h0)^2"
 
     @classmethod
     def allowed_parameter_handlers(cls) -> Iterable[Type[ParameterHandler]]:
@@ -165,10 +162,7 @@ class SMIRNOFFHarmonicHeightCollection(SMIRNOFFCollection):
         constrained_pairs: Set[Tuple[int, ...]],
         particle_map: Dict[Union[int, VirtualSiteKey], int],
     ) -> None:
-        force = openmm.CustomCompoundBondForce(
-            4,
-            self.expression
-        )
+        force = openmm.CustomCompoundBondForce(4, self.expression)
         force.addPerBondParameter("k")
         force.addPerBondParameter("h0")
         force.setName("HarmonicHeight")
@@ -182,25 +176,17 @@ class SMIRNOFFHarmonicHeightCollection(SMIRNOFFCollection):
 
             force.addBond(indices, [k, h0])
 
-from smirnoff_plugins.handlers.valence import LeeKrimmHandler
 
 class SMIRNOFFLeeKrimmCollection(SMIRNOFFCollection):
-    type: ClassVar[Literal["LeeKrimm"]] = "LeeKrimm"
-    is_plugin: ClassVar[bool] = True
-    acts_as: str = "LeeKrimm"
+    type: Literal["LeeKrimm"] = "LeeKrimm"
+    is_plugin: bool = True
 
-    expression: ClassVar[str] = (
-        "V2 * ((abs(h)^t) / (1 - abs(h)^s))^2 + "
-        "V4 * ((abs(h)^t) / (1 - abs(h)^s))^4;"
-        "h = abs((Nx*(x2-x1) + Ny*(y2-y1) + Nz*(z2-z1)) / sqrt(Nx^2 + Ny^2 + Nz^2));"
-        "Nx = (y3 - y1)*(z4 - z1) - (z3 - z1)*(y4 - y1);"
-        "Ny = (z3 - z1)*(x4 - x1) - (x3 - x1)*(z4 - z1);"
-        "Nz = (x3 - x1)*(y4 - y1) - (y3 - y1)*(x4 - x1);"
-    )
+    expression: Literal[
+        "V2 * ((abs(h)^t) / (1 - abs(h)^s))^2 + V4 * ((abs(h)^t) / (1 - abs(h)^s))^4"
+    ] = "V2 * ((abs(h)^t) / (1 - abs(h)^s))^2 + V4 * ((abs(h)^t) / (1 - abs(h)^s))^4"
 
     @classmethod
-    def allowed_parameter_handlers(cls):
-        from smirnoff_plugins.handlers.valence import LeeKrimmHandler
+    def allowed_parameter_handlers(cls) -> Iterable[Type[ParameterHandler]]:
         return (LeeKrimmHandler,)
 
     @classmethod
@@ -210,7 +196,7 @@ class SMIRNOFFLeeKrimmCollection(SMIRNOFFCollection):
     @classmethod
     def potential_parameters(cls) -> Iterable[str]:
         return "V2", "V4", "t", "s"
-    
+
     @classmethod
     def valence_terms(cls, topology):
         return topology.impropers
@@ -257,13 +243,12 @@ class SMIRNOFFLeeKrimmCollection(SMIRNOFFCollection):
 
         system.addForce(force)
 
-from smirnoff_plugins.handlers.valence import HarmonicAngleHandler
 
 class SMIRNOFFHarmonicAngleCollection(SMIRNOFFCollection):
-    is_plugin: ClassVar[bool] = True
-    type: ClassVar[str] = "HarmonicAngle"
+    is_plugin: bool = True
+    type: str = "HarmonicAngle"
 
-    expression: ClassVar[str] = "0.5 * k * (theta - theta0)^2;"
+    expression: Literal["0.5 * k * (theta - theta0)^2"] = "0.5 * k * (theta - theta0)^2"
 
     @classmethod
     def allowed_parameter_handlers(cls) -> Iterable[Type[ParameterHandler]]:
@@ -298,15 +283,24 @@ class SMIRNOFFHarmonicAngleCollection(SMIRNOFFCollection):
             param = parameter_handler.parameters[potential_key.id]
 
             key_tuple = (
-                param.k.m_as("kilojoule / mole / radian**2") 
-                if hasattr(param.k, "m_as") else param.k,
-                param.theta0.m_as("radian") 
-                if hasattr(param.theta0, "m_as") else param.theta0,
+                (
+                    param.k.m_as("kilojoule / mole / radian**2")
+                    if hasattr(param.k, "m_as")
+                    else param.k
+                ),
+                (
+                    param.theta0.m_as("radian")
+                    if hasattr(param.theta0, "m_as")
+                    else param.theta0
+                ),
             )
 
             if key_tuple not in seen_params:
                 seen_params[key_tuple] = Potential(
-                    parameters={pname: getattr(param, pname) for pname in self.potential_parameters()}
+                    parameters={
+                        pname: getattr(param, pname)
+                        for pname in self.potential_parameters()
+                    }
                 )
 
             self.potentials[potential_key] = seen_params[key_tuple]

@@ -30,17 +30,12 @@ class HarmonicHeightHandler(ParameterHandler):
     class HarmonicHeightType(ParameterType):
         _ELEMENT_NAME = "HarmonicHeight"
 
-        smirks = ParameterAttribute()
-        id = ParameterAttribute()
-        k = ParameterAttribute(unit=unit.kilojoule_per_mole / unit.nanometer**2)
-        h0 = ParameterAttribute(unit=unit.nanometer)
+        k = ParameterAttribute(default=None, unit=unit.kilojoule_per_mole / unit.nanometer**2)
+        h0 = ParameterAttribute(default=None, unit=unit.nanometer)
 
     _TAGNAME = "HarmonicHeights"
     _INFOTYPE = HarmonicHeightType
 
-    def find_matches(self, entity, unique=True):
-        """Find the HarmonicHeight matches in the topology/molecule."""
-        return self._find_matches(entity, unique=unique)
 
 class HarmonicAngleHandler(ParameterHandler):
     """Handler for HarmonicAngle improper-like interactions."""
@@ -48,28 +43,19 @@ class HarmonicAngleHandler(ParameterHandler):
     class HarmonicAngleType(ParameterType):
         _ELEMENT_NAME = "HarmonicAngle"
 
-        smirks = ParameterAttribute()
-        id = ParameterAttribute()
-        k = ParameterAttribute(unit=unit.kilocalorie_per_mole / unit.radians**2)
-        theta0 = ParameterAttribute(unit=unit.radians)
+        k = ParameterAttribute(default=None, unit=unit.kilocalorie_per_mole / unit.radians**2)
+        theta0 = ParameterAttribute(default=None, unit=unit.radians)
 
     _TAGNAME = "HarmonicAngle"
     _INFOTYPE = HarmonicAngleType
-
-    def find_matches(self, entity, unique=True):
-        """Find the HarmonicAngle matches in the topology/molecule."""
-        return self._find_matches(entity, unique=unique)
-
 
 
 class LeeKrimmHandler(ParameterHandler):
     """Handler for Lee-Krimm improper-like interactions."""
 
     class LeeKrimmType(ParameterType):
-        _ELEMENT_NAME = "Improper" 
+        _ELEMENT_NAME = "LeeKrimm" 
 
-        smirks = ParameterAttribute()
-        id = ParameterAttribute()       
         V2 = ParameterAttribute(unit=unit.kilojoule_per_mole)
         V4 = ParameterAttribute(unit=unit.kilojoule_per_mole)
         t = ParameterAttribute(default=2.0)
@@ -77,28 +63,3 @@ class LeeKrimmHandler(ParameterHandler):
 
     _TAGNAME = "LeeKrimm"
     _INFOTYPE = LeeKrimmType
-
-    def find_matches(self, entity, unique=True):
-        """Find the LeeKrimm matches in the topology/molecule."""
-        return self._find_matches(entity, unique=unique)
-
-
-class TwoMinimaHandler(ParameterHandler):
-    """Handler for TwoMinima improper-like interactions."""
-
-    class TwoMinimaType(ParameterType):
-        _ELEMENT_NAME = "TwoMinima"
-
-        smirks = ParameterAttribute()
-        id = ParameterAttribute()
-        k1 = ParameterAttribute(unit=unit.kilojoule_per_mole)
-        k2 = ParameterAttribute(unit=unit.kilojoule_per_mole)
-        periodicity = ParameterAttribute(default=1, converter=int)
-        phase = ParameterAttribute(default=0.0, unit=unit.radian)
-
-    _TAGNAME = "TwoMinima"
-    _INFOTYPE = TwoMinimaType
-
-    def find_matches(self, entity, unique=True):
-        """Find the TwoMinima matches in the topology/molecule."""
-        return self._find_matches(entity, unique=unique)

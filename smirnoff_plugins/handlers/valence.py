@@ -54,6 +54,9 @@ class HarmonicAngleHandler(ParameterHandler):
     _TAGNAME = "HarmonicAngle"
     _INFOTYPE = HarmonicAngleType
 
+    def find_matches(self, entity, unique=True):
+        """Find the HarmonicAngle matches in the topology/molecule."""
+        return self._find_matches(entity, unique=unique)
 
 class LeeKrimmHandler(ParameterHandler):
     """Handler for Lee-Krimm improper-like interactions."""
@@ -68,3 +71,7 @@ class LeeKrimmHandler(ParameterHandler):
 
     _TAGNAME = "LeeKrimm"
     _INFOTYPE = LeeKrimmType
+
+    def find_matches(self, entity, unique=True):
+        """Find the LeeKrimm matches in the topology/molecule."""
+        return self._find_matches(entity, unique=unique)

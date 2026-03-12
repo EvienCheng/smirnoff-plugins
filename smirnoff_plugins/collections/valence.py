@@ -35,7 +35,7 @@ def _cache_urey_bradley_parameter_lookup(
 class SMIRNOFFUreyBradleyCollection(SMIRNOFFCollection):
     is_plugin: bool = True
 
-    type: Literal["UreyBradleys"] = "UreyBradleys"
+    type: Literal["UreyBradley"] = "UreyBradley"
 
     expression: Literal["k/2*(r-length)**2"] = "k/2*(r-length)**2"
 
@@ -122,29 +122,43 @@ class SMIRNOFFUreyBradleyCollection(SMIRNOFFCollection):
 
 
 class SMIRNOFFHarmonicHeightCollection(SMIRNOFFCollection):
+    """Harmonic potential on the pyramid height of the central atom above its three neighbors."""
+
     is_plugin: bool = True
 
     type: Literal["HarmonicHeight"] = "HarmonicHeight"
 
-    expression: Literal["0.5 * k * (h - h0)^2"] = "0.5 * k * (h - h0)^2"
+    expression: str = (
+        "0.5 * k * (h - h0)^2; "
+        "h = ((x1-x2)*nx + (y1-y2)*ny + (z1-z2)*nz) / normal_mag; "
+        "normal_mag = sqrt(nx^2 + ny^2 + nz^2); "
+        "nx = (y3-y2)*(z4-z2) - (z3-z2)*(y4-y2); "
+        "ny = (z3-z2)*(x4-x2) - (x3-x2)*(z4-z2); "
+        "nz = (x3-x2)*(y4-y2) - (y3-y2)*(x4-x2)"
+    )
 
     @classmethod
     def allowed_parameter_handlers(cls) -> Iterable[Type[ParameterHandler]]:
+        """Return an iterable of allowed types of ParameterHandler classes."""
         return (HarmonicHeightHandler,)
 
     @classmethod
     def supported_parameters(cls) -> Iterable[str]:
+        """Return an iterable of supported parameter attributes."""
         return "smirks", "id", "k", "h0"
 
     @classmethod
     def potential_parameters(cls) -> Iterable[str]:
+        """Return a subset of `supported_parameters` that are meant to be included in potentials."""
         return "k", "h0"
 
     @classmethod
     def valence_terms(cls, topology):
+        """Return all impropers in this topology."""
         return topology.impropers
 
-    def store_potentials(self, parameter_handler):
+    def store_potentials(self, parameter_handler: HarmonicHeightHandler) -> None:
+        """Store the potentials from the parameter handler."""
         for potential_key in self.key_map.values():
             param = parameter_handler.parameters[potential_key.id]
             self.potentials[potential_key] = Potential(
@@ -178,30 +192,43 @@ class SMIRNOFFHarmonicHeightCollection(SMIRNOFFCollection):
 
 
 class SMIRNOFFLeeKrimmCollection(SMIRNOFFCollection):
+    """Lee-Krimm potential: V2*((|h|^t)/(1-|h|^s))^2 + V4*((|h|^t)/(1-|h|^s))^4
+    where h is the pyramid height of the central atom above its three neighbors."""
+
     type: Literal["LeeKrimm"] = "LeeKrimm"
     is_plugin: bool = True
 
-    expression: Literal[
-        "V2 * ((abs(h)^t) / (1 - abs(h)^s))^2 + V4 * ((abs(h)^t) / (1 - abs(h)^s))^4"
-    ] = "V2 * ((abs(h)^t) / (1 - abs(h)^s))^2 + V4 * ((abs(h)^t) / (1 - abs(h)^s))^4"
+    expression: str = (
+        "V2 * ((abs(h)^t) / (1 - abs(h)^s))^2 + V4 * ((abs(h)^t) / (1 - abs(h)^s))^4; "
+        "h = ((x1-x2)*nx + (y1-y2)*ny + (z1-z2)*nz) / normal_mag; "
+        "normal_mag = sqrt(nx^2 + ny^2 + nz^2); "
+        "nx = (y3-y2)*(z4-z2) - (z3-z2)*(y4-y2); "
+        "ny = (z3-z2)*(x4-x2) - (x3-x2)*(z4-z2); "
+        "nz = (x3-x2)*(y4-y2) - (y3-y2)*(x4-x2)"
+    )
 
     @classmethod
     def allowed_parameter_handlers(cls) -> Iterable[Type[ParameterHandler]]:
+        """Return an iterable of allowed types of ParameterHandler classes."""
         return (LeeKrimmHandler,)
 
     @classmethod
     def supported_parameters(cls) -> Iterable[str]:
+        """Return an iterable of supported parameter attributes."""
         return "smirks", "id", "V2", "V4", "t", "s"
 
     @classmethod
     def potential_parameters(cls) -> Iterable[str]:
+        """Return a subset of `supported_parameters` that are meant to be included in potentials."""
         return "V2", "V4", "t", "s"
 
     @classmethod
     def valence_terms(cls, topology):
+        """Return all impropers in this topology."""
         return topology.impropers
 
-    def store_potentials(self, parameter_handler):
+    def store_potentials(self, parameter_handler: LeeKrimmHandler) -> None:
+        """Store the potentials from the parameter handler."""
         for potential_key in self.key_map.values():
             param = parameter_handler.parameters[potential_key.id]
             self.potentials[potential_key] = Potential(
@@ -218,7 +245,7 @@ class SMIRNOFFLeeKrimmCollection(SMIRNOFFCollection):
         interchange: Interchange,
         system: openmm.System,
         add_constrained_forces: bool,
-        constrained_pairs: Set[tuple[int, ...]],
+        constrained_pairs: Set[Tuple[int, ...]],
         particle_map: Dict[Union[int, VirtualSiteKey], int],
     ) -> None:
         force = openmm.CustomCompoundBondForce(4, self.expression)
@@ -245,65 +272,72 @@ class SMIRNOFFLeeKrimmCollection(SMIRNOFFCollection):
 
 
 class SMIRNOFFHarmonicAngleCollection(SMIRNOFFCollection):
-    is_plugin: bool = True
-    type: str = "HarmonicAngle"
+    """Harmonic bond-plane angle (Wilson-Decius) for improper torsions.
 
-    expression: Literal["0.5 * k * (theta - theta0)^2"] = "0.5 * k * (theta - theta0)^2"
+    For each improper (central, n1, n2, n3), three bond-plane angles are generated
+    measuring the angle each bond makes with the plane of the remaining atoms.
+    Particles: p1=bond_atom, p2=oop_atom, p3=plane_atom2, p4=plane_atom3.
+    """
+
+    is_plugin: bool = True
+    type: Literal["HarmonicAngle"] = "HarmonicAngle"
+
+    expression: str = (
+        "0.5 * k * (theta - theta0)^2; "
+        "theta = asin(max(-1, min(1, sin_theta))); "
+        "sin_theta = dot_product / max(1e-10, cross_norm); "
+        "dot_product = crossx*v_oopx_norm + crossy*v_oopy_norm + crossz*v_oopz_norm; "
+        "cross_norm = sqrt(crossx^2 + crossy^2 + crossz^2); "
+        "crossx = v12y_norm*v13z_norm - v12z_norm*v13y_norm; "
+        "crossy = v12z_norm*v13x_norm - v12x_norm*v13z_norm; "
+        "crossz = v12x_norm*v13y_norm - v12y_norm*v13x_norm; "
+        "v12x_norm = v12x/r12; v12y_norm = v12y/r12; v12z_norm = v12z/r12; "
+        "v13x_norm = v13x/r13; v13y_norm = v13y/r13; v13z_norm = v13z/r13; "
+        "v_oopx_norm = v_oopx/r_oop; v_oopy_norm = v_oopy/r_oop; v_oopz_norm = v_oopz/r_oop; "
+        "r12 = sqrt(v12x^2 + v12y^2 + v12z^2 + 1e-10); "
+        "r13 = sqrt(v13x^2 + v13y^2 + v13z^2 + 1e-10); "
+        "r_oop = sqrt(v_oopx^2 + v_oopy^2 + v_oopz^2 + 1e-10); "
+        "v12x = x3-x1; v12y = y3-y1; v12z = z3-z1; "
+        "v13x = x4-x1; v13y = y4-y1; v13z = z4-z1; "
+        "v_oopx = x2-x1; v_oopy = y2-y1; v_oopz = z2-z1"
+    )
 
     @classmethod
     def allowed_parameter_handlers(cls) -> Iterable[Type[ParameterHandler]]:
+        """Return an iterable of allowed types of ParameterHandler classes."""
         return (HarmonicAngleHandler,)
 
     @classmethod
     def supported_parameters(cls) -> Iterable[str]:
+        """Return an iterable of supported parameter attributes."""
         return "smirks", "id", "k", "theta0"
 
     @classmethod
     def potential_parameters(cls) -> Iterable[str]:
+        """Return a subset of `supported_parameters` that are meant to be included in potentials."""
         return "k", "theta0"
 
     @classmethod
     def valence_terms(cls, topology):
-        """Return all unique angle tuples in canonical order: (atom1, central, atom2)."""
-        unique_terms = []
-        seen = set()
-        for angle in topology.angles:
-            central = angle[1]
-            others = tuple(sorted([angle[0], angle[2]]))
-            canonical = (others[0], central, others[1])
-            if canonical not in seen:
-                seen.add(canonical)
-                unique_terms.append(canonical)
-        return unique_terms
+        """Return all bond-plane angle terms (3 per improper) in this topology."""
+        bond_plane_angles = []
+        for improper in topology.impropers:
+            atom1, oop, atom2, atom3 = improper
+            bond_plane_angles.append((atom1, oop, atom2, atom3))
+            bond_plane_angles.append((atom2, oop, atom1, atom3))
+            bond_plane_angles.append((atom3, oop, atom1, atom2))
+        return bond_plane_angles
 
     def store_potentials(self, parameter_handler: HarmonicAngleHandler) -> None:
-        seen_params = {}
-
+        """Store the potentials from the parameter handler."""
         for potential_key in self.key_map.values():
             param = parameter_handler.parameters[potential_key.id]
-
-            key_tuple = (
-                (
-                    param.k.m_as("kilojoule / mole / radian**2")
-                    if hasattr(param.k, "m_as")
-                    else param.k
-                ),
-                (
-                    param.theta0.m_as("radian")
-                    if hasattr(param.theta0, "m_as")
-                    else param.theta0
-                ),
+            self.potentials[potential_key] = Potential(
+                parameters={
+                    "k": param.k,
+                    "theta0": param.theta0,
+                }
             )
-
-            if key_tuple not in seen_params:
-                seen_params[key_tuple] = Potential(
-                    parameters={
-                        pname: getattr(param, pname)
-                        for pname in self.potential_parameters()
-                    }
-                )
-
-            self.potentials[potential_key] = seen_params[key_tuple]
 
     def modify_openmm_forces(
         self,
@@ -313,10 +347,9 @@ class SMIRNOFFHarmonicAngleCollection(SMIRNOFFCollection):
         constrained_pairs: Set[Tuple[int, ...]],
         particle_map: Dict[Union[int, VirtualSiteKey], int],
     ) -> None:
-        """Add a harmonic angle force to OpenMM."""
-        force = openmm.CustomAngleForce(self.expression)
-        force.addPerAngleParameter("k")
-        force.addPerAngleParameter("theta0")
+        force = openmm.CustomCompoundBondForce(4, self.expression)
+        force.addPerBondParameter("k")
+        force.addPerBondParameter("theta0")
         force.setName("HarmonicAngle")
         system.addForce(force)
 
@@ -325,4 +358,4 @@ class SMIRNOFFHarmonicAngleCollection(SMIRNOFFCollection):
             params = self.potentials[pot_key].parameters
             k = params["k"].m_as("kilojoule / mole / radian**2")
             theta0 = params["theta0"].m_as("radian")
-            force.addAngle(indices[0], indices[1], indices[2], [k, theta0])
+            force.addBond(indices, [k, theta0])

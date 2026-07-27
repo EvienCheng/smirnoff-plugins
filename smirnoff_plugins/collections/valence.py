@@ -4,7 +4,7 @@ from typing import Dict, Iterable, Literal, Set, Tuple, Type, Union
 from openff.interchange import Interchange
 from openff.interchange.components.potentials import Potential
 from openff.interchange.interop.openmm._valence import _is_constrained
-from openff.interchange.models import PotentialKey, VirtualSiteKey
+from openff.interchange.models import PotentialKey, TopologyKey, VirtualSiteKey
 from openff.interchange.smirnoff._base import SMIRNOFFCollection
 from openff.toolkit import Quantity
 from openff.toolkit import unit as off_unit
@@ -122,7 +122,14 @@ class SMIRNOFFUreyBradleyCollection(SMIRNOFFCollection):
 
 
 class SMIRNOFFHarmonicHeightCollection(SMIRNOFFCollection):
-    """Harmonic potential on the pyramid height of the central atom above its three neighbors."""
+    """Harmonic potential on the pyramid height of the central atom above its three neighbors.
+
+    Particles: p1, p3, p4 are the three neighbors (the base plane, anchored at p1);
+    p2 is the central atom (the apex atom whose height above that plane is restrained).
+    This atom-index convention (central atom second) matches ``ImproperDict`` and
+    ``Topology.impropers``, which is what ``HarmonicHeightHandler.find_matches`` uses to
+    canonicalize matches.
+    """
 
     is_plugin: bool = True
 
@@ -130,11 +137,11 @@ class SMIRNOFFHarmonicHeightCollection(SMIRNOFFCollection):
 
     expression: str = (
         "0.5 * k * (h - h0)^2; "
-        "h = ((x1-x2)*nx + (y1-y2)*ny + (z1-z2)*nz) / normal_mag; "
+        "h = ((x2-x1)*nx + (y2-y1)*ny + (z2-z1)*nz) / normal_mag; "
         "normal_mag = sqrt(nx^2 + ny^2 + nz^2); "
-        "nx = (y3-y2)*(z4-z2) - (z3-z2)*(y4-y2); "
-        "ny = (z3-z2)*(x4-x2) - (x3-x2)*(z4-z2); "
-        "nz = (x3-x2)*(y4-y2) - (y3-y2)*(x4-x2)"
+        "nx = (y3-y1)*(z4-z1) - (z3-z1)*(y4-y1); "
+        "ny = (z3-z1)*(x4-x1) - (x3-x1)*(z4-z1); "
+        "nz = (x3-x1)*(y4-y1) - (y3-y1)*(x4-x1)"
     )
 
     @classmethod
@@ -193,18 +200,25 @@ class SMIRNOFFHarmonicHeightCollection(SMIRNOFFCollection):
 
 class SMIRNOFFLeeKrimmCollection(SMIRNOFFCollection):
     """Lee-Krimm potential: V2*((|h|^t)/(1-|h|^s))^2 + V4*((|h|^t)/(1-|h|^s))^4
-    where h is the pyramid height of the central atom above its three neighbors."""
+    where h is the pyramid height of the central atom above its three neighbors.
+
+    Particles: p1, p3, p4 are the three neighbors (the base plane, anchored at p1);
+    p2 is the central atom (the apex atom whose height above that plane is used).
+    This atom-index convention (central atom second) matches ``ImproperDict`` and
+    ``Topology.impropers``, which is what ``LeeKrimmHandler.find_matches`` uses to
+    canonicalize matches.
+    """
 
     type: Literal["LeeKrimm"] = "LeeKrimm"
     is_plugin: bool = True
 
     expression: str = (
         "V2 * ((abs(h)^t) / (1 - abs(h)^s))^2 + V4 * ((abs(h)^t) / (1 - abs(h)^s))^4; "
-        "h = ((x1-x2)*nx + (y1-y2)*ny + (z1-z2)*nz) / normal_mag; "
+        "h = ((x2-x1)*nx + (y2-y1)*ny + (z2-z1)*nz) / normal_mag; "
         "normal_mag = sqrt(nx^2 + ny^2 + nz^2); "
-        "nx = (y3-y2)*(z4-z2) - (z3-z2)*(y4-y2); "
-        "ny = (z3-z2)*(x4-x2) - (x3-x2)*(z4-z2); "
-        "nz = (x3-x2)*(y4-y2) - (y3-y2)*(x4-x2)"
+        "nx = (y3-y1)*(z4-z1) - (z3-z1)*(y4-y1); "
+        "ny = (z3-z1)*(x4-x1) - (x3-x1)*(z4-z1); "
+        "nz = (x3-x1)*(y4-y1) - (y3-y1)*(x4-x1)"
     )
 
     @classmethod
@@ -274,9 +288,18 @@ class SMIRNOFFLeeKrimmCollection(SMIRNOFFCollection):
 class SMIRNOFFHarmonicAngleCollection(SMIRNOFFCollection):
     """Harmonic bond-plane angle (Wilson-Decius) for improper torsions.
 
-    For each improper (central, n1, n2, n3), three bond-plane angles are generated
-    measuring the angle each bond makes with the plane of the remaining atoms.
-    Particles: p1=bond_atom, p2=oop_atom, p3=plane_atom2, p4=plane_atom3.
+    For each improper (n1, central, n2, n3) matched by a HarmonicAngle SMIRKS, three
+    bond-plane angles are generated, one per choice of "bond" neighbor, measuring the
+    angle that bond makes with the plane spanned by the other two neighbor bonds.
+    Particles: p1=bond_atom, p2=central_atom, p3=plane_atom2, p4=plane_atom3.
+    This atom-index convention (central atom second) matches ``ImproperDict`` and
+    ``Topology.impropers``, which is what ``HarmonicAngleHandler.find_matches`` uses to
+    canonicalize matches.
+
+    As with ``ImproperTorsionHandler``'s default ``idivf="auto"``, the parameter's ``k``
+    is divided by 3 across the three symmetrized terms (see `store_potentials`), so the
+    total restraint on a given center is on the same scale as a single bond-plane angle
+    term rather than tripling.
     """
 
     is_plugin: bool = True
@@ -297,9 +320,9 @@ class SMIRNOFFHarmonicAngleCollection(SMIRNOFFCollection):
         "r12 = sqrt(v12x^2 + v12y^2 + v12z^2 + 1e-10); "
         "r13 = sqrt(v13x^2 + v13y^2 + v13z^2 + 1e-10); "
         "r_oop = sqrt(v_oopx^2 + v_oopy^2 + v_oopz^2 + 1e-10); "
-        "v12x = x3-x1; v12y = y3-y1; v12z = z3-z1; "
-        "v13x = x4-x1; v13y = y4-y1; v13z = z4-z1; "
-        "v_oopx = x2-x1; v_oopy = y2-y1; v_oopz = z2-z1"
+        "v12x = x3-x2; v12y = y3-y2; v12z = z3-z2; "
+        "v13x = x4-x2; v13y = y4-y2; v13z = z4-z2; "
+        "v_oopx = x1-x2; v_oopy = y1-y2; v_oopz = z1-z2"
     )
 
     @classmethod
@@ -322,19 +345,74 @@ class SMIRNOFFHarmonicAngleCollection(SMIRNOFFCollection):
         """Return all bond-plane angle terms (3 per improper) in this topology."""
         bond_plane_angles = []
         for improper in topology.impropers:
-            atom1, oop, atom2, atom3 = improper
-            bond_plane_angles.append((atom1, oop, atom2, atom3))
-            bond_plane_angles.append((atom2, oop, atom1, atom3))
-            bond_plane_angles.append((atom3, oop, atom1, atom2))
+            neighbor1, central, neighbor2, neighbor3 = improper
+            bond_plane_angles.append((neighbor1, central, neighbor2, neighbor3))
+            bond_plane_angles.append((neighbor2, central, neighbor1, neighbor3))
+            bond_plane_angles.append((neighbor3, central, neighbor1, neighbor2))
         return bond_plane_angles
 
+    def store_matches(
+        self,
+        parameter_handler: HarmonicAngleHandler,
+        topology,
+    ) -> None:
+        """Populate self.key_map, expanding each matched improper into its three
+        bond-plane angles (one per choice of which neighbor is the "bond" atom)."""
+        if self.key_map:
+            self.key_map = dict()
+
+        matches = parameter_handler.find_matches(topology)
+
+        for key, val in matches.items():
+            parameter_handler._assert_correct_connectivity(
+                val,
+                [
+                    (0, 1),
+                    (1, 2),
+                    (1, 3),
+                ],
+            )
+
+            parameter: HarmonicAngleHandler.HarmonicAngleType = val.parameter_type
+
+            cosmetic_attributes = {
+                cosmetic_attribute: getattr(
+                    parameter,
+                    f"_{cosmetic_attribute}",
+                )
+                for cosmetic_attribute in parameter._cosmetic_attribs
+            }
+
+            potential_key = PotentialKey(
+                id=parameter.smirks,
+                associated_handler=parameter_handler.TAGNAME,
+                cosmetic_attributes=cosmetic_attributes,
+            )
+
+            central = key[1]
+            neighbors = [key[0], key[2], key[3]]
+
+            for i, j, k in [(0, 1, 2), (1, 0, 2), (2, 0, 1)]:
+                topology_key = TopologyKey(
+                    atom_indices=(neighbors[i], central, neighbors[j], neighbors[k]),
+                )
+                self.key_map[topology_key] = potential_key
+
     def store_potentials(self, parameter_handler: HarmonicAngleHandler) -> None:
-        """Store the potentials from the parameter handler."""
+        """Store the potentials from the parameter handler.
+
+        Each improper center is symmetrized into 3 bond-plane angle terms (see
+        `store_matches`), analogous to how `ImproperTorsionHandler` symmetrizes a
+        trivalent center into 3 torsion terms. As with that handler's default
+        `idivf="auto"`, `k` is divided by 3 here so the total restraint on a given
+        center stays on the same scale as a single bond-plane angle term, rather
+        than tripling.
+        """
         for potential_key in self.key_map.values():
             param = parameter_handler.parameters[potential_key.id]
             self.potentials[potential_key] = Potential(
                 parameters={
-                    "k": param.k,
+                    "k": param.k / 3,
                     "theta0": param.theta0,
                 }
             )

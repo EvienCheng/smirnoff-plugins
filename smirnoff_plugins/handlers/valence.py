@@ -1,4 +1,5 @@
 from openff.toolkit import unit
+from openff.toolkit.topology import ImproperDict
 from openff.toolkit.typing.engines.smirnoff.parameters import (
     ConstraintHandler,
     ParameterAttribute,
@@ -44,8 +45,11 @@ class HarmonicHeightHandler(ParameterHandler):
     _INFOTYPE = HarmonicHeightType
 
     def find_matches(self, entity, unique=True):
-        """Find the HarmonicHeight matches in the topology/molecule."""
-        return self._find_matches(entity, unique=unique)
+        """Find HarmonicHeight matches, symmetrizing impropers like ImproperTorsionHandler."""
+        return self._find_matches(
+            entity, transformed_dict_cls=ImproperDict, unique=unique
+        )
+
 
 class HarmonicAngleHandler(ParameterHandler):
     """Handler for HarmonicAngle improper-like interactions."""
@@ -62,8 +66,11 @@ class HarmonicAngleHandler(ParameterHandler):
     _INFOTYPE = HarmonicAngleType
 
     def find_matches(self, entity, unique=True):
-        """Find the HarmonicAngle matches in the topology/molecule."""
-        return self._find_matches(entity, unique=unique)
+        """Find HarmonicAngle matches, symmetrizing impropers like ImproperTorsionHandler."""
+        return self._find_matches(
+            entity, transformed_dict_cls=ImproperDict, unique=unique
+        )
+
 
 class LeeKrimmHandler(ParameterHandler):
     """Handler for Lee-Krimm improper-like interactions."""
@@ -80,5 +87,7 @@ class LeeKrimmHandler(ParameterHandler):
     _INFOTYPE = LeeKrimmType
 
     def find_matches(self, entity, unique=True):
-        """Find the LeeKrimm matches in the topology/molecule."""
-        return self._find_matches(entity, unique=unique)
+        """Find LeeKrimm matches, symmetrizing impropers like ImproperTorsionHandler."""
+        return self._find_matches(
+            entity, transformed_dict_cls=ImproperDict, unique=unique
+        )

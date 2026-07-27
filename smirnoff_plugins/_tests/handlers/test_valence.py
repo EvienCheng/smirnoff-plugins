@@ -188,7 +188,9 @@ def test_harmonic_height_assignment_methane(methane_molecule: Molecule):
     handler = ff.get_parameter_handler("HarmonicHeight")
     handler.add_parameter(
         {
-            "smirks": "[#6X4:1]([#1:2])([#1:3])[#1:4]",
+            # Central atom (the apex whose height is restrained) is tagged second,
+            # matching Topology.impropers/ImproperDict convention.
+            "smirks": "[#1:1][#6X4:2]([#1:3])[#1:4]",
             "k": 500 * unit.kilojoule_per_mole / unit.nanometer**2,
             "h0": 0.0 * unit.nanometers,
         }
@@ -213,7 +215,14 @@ def test_harmonic_height_assignment_methane(methane_molecule: Molecule):
     assert len(hh_forces) == 1, "Expected exactly one HarmonicHeight force."
 
     hh_force = hh_forces[0]
-    assert hh_force.getNumBonds() > 0, "Expected at least one HarmonicHeight term."
+    # Methane's carbon has 4 hydrogens; the smirks only tags 3 branches, so there
+    # are exactly 4 distinct (unordered) choices of which 3 H's form the base
+    # plane. Each choice must be matched exactly once -- regression test for a
+    # bug where un-symmetrized matching produced 24 duplicate (and, for h0 != 0,
+    # sign-inconsistent) terms instead.
+    assert (
+        hh_force.getNumBonds() == 4
+    ), f"Expected exactly 4 HarmonicHeight terms for methane, got {hh_force.getNumBonds()}."
 
     hh_idx = forces.index(hh_force)
     hh_energy = raw_energies[hh_idx].value_in_unit(openmm.unit.kilojoules_per_mole)
@@ -233,7 +242,9 @@ def test_lee_krimm_assignment_methane(methane_molecule: Molecule):
     handler = ff.get_parameter_handler("LeeKrimm")
     handler.add_parameter(
         {
-            "smirks": "[#6X4:1]([#1:2])([#1:3])[#1:4]",
+            # Central atom (the apex whose height is used) is tagged second,
+            # matching Topology.impropers/ImproperDict convention.
+            "smirks": "[#1:1][#6X4:2]([#1:3])[#1:4]",
             "V2": 10.0 * unit.kilojoule_per_mole,
             "V4": 1.0 * unit.kilojoule_per_mole,
             "t": 2.0,
@@ -260,7 +271,12 @@ def test_lee_krimm_assignment_methane(methane_molecule: Molecule):
     assert len(lk_forces) == 1, "Expected exactly one LeeKrimm force."
 
     lk_force = lk_forces[0]
-    assert lk_force.getNumBonds() > 0, "Expected at least one LeeKrimm term."
+    # See test_harmonic_height_assignment_methane: 4 distinct (unordered) choices
+    # of which 3 of methane's 4 H's form the base plane. Regression test for a
+    # bug where matches weren't symmetrized, producing 24 duplicate terms.
+    assert (
+        lk_force.getNumBonds() == 4
+    ), f"Expected exactly 4 LeeKrimm terms for methane, got {lk_force.getNumBonds()}."
 
     lk_idx = forces.index(lk_force)
     lk_energy = raw_energies[lk_idx].value_in_unit(openmm.unit.kilojoules_per_mole)
@@ -280,7 +296,9 @@ def test_harmonic_angle_assignment_methane(methane_molecule: Molecule):
     handler = ff.get_parameter_handler("HarmonicAngle")
     handler.add_parameter(
         {
-            "smirks": "[#6X4:1]([#1:2])([#1:3])[#1:4]",
+            # Central atom is tagged second, matching Topology.impropers/ImproperDict
+            # convention.
+            "smirks": "[#1:1][#6X4:2]([#1:3])[#1:4]",
             "k": 100 * unit.kilocalorie_per_mole / unit.radians**2,
             "theta0": 0.0 * unit.radians,
         }
@@ -305,10 +323,16 @@ def test_harmonic_angle_assignment_methane(methane_molecule: Molecule):
     assert len(ha_forces) == 1, "Expected exactly one HarmonicAngle force."
 
     ha_force = ha_forces[0]
-    assert ha_force.getNumBonds() > 0, "Expected at least one HarmonicAngle term."
+    # 4 distinct improper centers (see test_harmonic_height_assignment_methane),
+    # each expanded into 3 bond-plane angles (one per choice of "bond" neighbor).
+    assert (
+        ha_force.getNumBonds() == 12
+    ), f"Expected exactly 12 HarmonicAngle terms for methane, got {ha_force.getNumBonds()}."
 
     ha_idx = forces.index(ha_force)
     ha_energy = raw_energies[ha_idx].value_in_unit(openmm.unit.kilojoules_per_mole)
 
     # For tetrahedral methane with theta0=0, all bond-plane angles are > 0 so energy > 0
-    assert ha_energy > 0, f"Expected positive energy, got {ha_energy} kJ/mol."
+    assert (
+        ha_energy > 0
+    ), f"Expected positive energy, got {ha_energy} kJ/mol."  # pyright: ignore[reportOperatorIssue]

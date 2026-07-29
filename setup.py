@@ -48,6 +48,7 @@ setup(
             "DampedExp6810Handler = smirnoff_plugins.handlers.nonbonded:DampedExp6810Handler",
             "AxilrodTellerHandler = smirnoff_plugins.handlers.nonbonded:AxilrodTellerHandler",
             "MultipoleHandler = smirnoff_plugins.handlers.nonbonded:MultipoleHandler",
+            "HarmonicHeightHandler = smirnoff_plugins.handlers.bonded:HarmonicHeightHandler",
             "DoubleExponentialVirtualSiteHandler = smirnoff_plugins.handlers.vsites:DoubleExponentialVirtualSiteHandler",
         ],
         "openff.interchange.plugins.collections": [
@@ -60,6 +61,7 @@ setup(
             "SMIRNOFFDampedExp6810Collection = smirnoff_plugins.collections.nonbonded:SMIRNOFFDampedExp6810Collection",
             "SMIRNOFFAxilrodTellerCollection = smirnoff_plugins.collections.nonbonded:SMIRNOFFAxilrodTellerCollection",
             "SMIRNOFFMultipoleCollection = smirnoff_plugins.collections.nonbonded:SMIRNOFFMultipoleCollection",
+            "HarmonicHeightCollection = smirnoff_plugins.collections.bonded:HarmonicHeightCollection",
             "SMIRNOFFDoubleExponentialVirtualSiteCollection = smirnoff_plugins.collections.vsites:SMIRNOFFDoubleExponentialVirtualSiteCollection",
         ],
     },

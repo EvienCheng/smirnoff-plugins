@@ -7,12 +7,16 @@ from openff.interchange import Interchange
 from openff.interchange.drivers.openmm import _get_openmm_energies
 from openff.toolkit import ForceField, Molecule, Topology, unit
 
+<<<<<<< HEAD
 from smirnoff_plugins.collections.valence import (
     SMIRNOFFHarmonicAngleCollection,
     SMIRNOFFHarmonicHeightCollection,
     SMIRNOFFLeeKrimmCollection,
     SMIRNOFFUreyBradleyCollection,
 )
+=======
+from smirnoff_plugins.collections.valence import SMIRNOFFUreyBradleyCollection
+>>>>>>> b69a152 (Add Urey-Bradley plug-in (#82))
 
 
 @pytest.fixture(scope="module")
@@ -52,7 +56,11 @@ def test_urey_bradley_assignment_methane(
     ff = ForceField("openff_unconstrained-2.2.1.offxml", load_plugins=True)
 
     # Add H-C-H Urey-Bradley term, with arbitrary parameters.
+<<<<<<< HEAD
     urey_bradley_handler = ff.get_parameter_handler("UreyBradley")
+=======
+    urey_bradley_handler = ff.get_parameter_handler("UreyBradleys")
+>>>>>>> b69a152 (Add Urey-Bradley plug-in (#82))
     urey_bradley_handler.add_parameter(
         {
             "smirks": "[#1:1]-[#6X4]-[#1:2]",
@@ -77,7 +85,11 @@ def test_urey_bradley_assignment_methane(
 
     # Check that the Urey-Bradley terms are present in the interchange object.
     collection = cast(
+<<<<<<< HEAD
         SMIRNOFFUreyBradleyCollection, interchange.collections["UreyBradley"]
+=======
+        SMIRNOFFUreyBradleyCollection, interchange.collections["UreyBradleys"]
+>>>>>>> b69a152 (Add Urey-Bradley plug-in (#82))
     )
     urey_bradley_terms_interchange = list(collection.valence_terms(topology))
 
@@ -158,7 +170,11 @@ def test_urey_bradley_incorrect_smirks(methane_molecule: Molecule):
     """Check that an error is raised for incorrect SMIRKS patterns which return too many atoms."""
 
     ff = ForceField("openff_unconstrained-2.2.1.offxml", load_plugins=True)
+<<<<<<< HEAD
     urey_bradley_handler = ff.get_parameter_handler("UreyBradley")
+=======
+    urey_bradley_handler = ff.get_parameter_handler("UreyBradleys")
+>>>>>>> b69a152 (Add Urey-Bradley plug-in (#82))
     urey_bradley_handler.add_parameter(
         {
             "smirks": "[#1:1]-[#6X4:2]-[#1:3]",  # Invalid SMIRKS - this specifies three atoms
@@ -175,6 +191,7 @@ def test_urey_bradley_incorrect_smirks(methane_molecule: Molecule):
         ValueError, match="Expected 2 indices for Urey-Bradley potential"
     ):
         interchange.to_openmm()
+<<<<<<< HEAD
 
 
 # ---------- HarmonicHeight tests ----------
@@ -336,3 +353,5 @@ def test_harmonic_angle_assignment_methane(methane_molecule: Molecule):
     assert (
         ha_energy > 0
     ), f"Expected positive energy, got {ha_energy} kJ/mol."  # pyright: ignore[reportOperatorIssue]
+=======
+>>>>>>> b69a152 (Add Urey-Bradley plug-in (#82))

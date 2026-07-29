@@ -4,19 +4,27 @@ from typing import Dict, Iterable, Literal, Set, Tuple, Type, Union
 from openff.interchange import Interchange
 from openff.interchange.components.potentials import Potential
 from openff.interchange.interop.openmm._valence import _is_constrained
+<<<<<<< HEAD
 from openff.interchange.models import PotentialKey, TopologyKey, VirtualSiteKey
+=======
+from openff.interchange.models import PotentialKey, VirtualSiteKey
+>>>>>>> b69a152 (Add Urey-Bradley plug-in (#82))
 from openff.interchange.smirnoff._base import SMIRNOFFCollection
 from openff.toolkit import Quantity
 from openff.toolkit import unit as off_unit
 from openff.toolkit.typing.engines.smirnoff.parameters import ParameterHandler
 from openmm import openmm
 
+<<<<<<< HEAD
 from smirnoff_plugins.handlers.valence import (
     HarmonicAngleHandler,
     HarmonicHeightHandler,
     LeeKrimmHandler,
     UreyBradleyHandler,
 )
+=======
+from smirnoff_plugins.handlers.valence import UreyBradleyHandler
+>>>>>>> b69a152 (Add Urey-Bradley plug-in (#82))
 
 
 @lru_cache
@@ -35,9 +43,15 @@ def _cache_urey_bradley_parameter_lookup(
 class SMIRNOFFUreyBradleyCollection(SMIRNOFFCollection):
     is_plugin: bool = True
 
+<<<<<<< HEAD
     type: Literal["UreyBradley"] = "UreyBradley"
 
     expression: Literal["k/2*(r-length)**2"] = "k/2*(r-length)**2"
+=======
+    type: Literal["UreyBradleys"] = "UreyBradleys"
+
+    expression: Literal["k/2*(r - length)**2"] = "k/2*(r - length)**2"
+>>>>>>> b69a152 (Add Urey-Bradley plug-in (#82))
 
     @classmethod
     def allowed_parameter_handlers(cls) -> Iterable[Type[ParameterHandler]]:
@@ -119,6 +133,7 @@ class SMIRNOFFUreyBradleyCollection(SMIRNOFFCollection):
                 length=length,
                 k=k,
             )
+<<<<<<< HEAD
 
 
 class SMIRNOFFHarmonicHeightCollection(SMIRNOFFCollection):
@@ -437,3 +452,5 @@ class SMIRNOFFHarmonicAngleCollection(SMIRNOFFCollection):
             k = params["k"].m_as("kilojoule / mole / radian**2")
             theta0 = params["theta0"].m_as("radian")
             force.addBond(indices, [k, theta0])
+=======
+>>>>>>> b69a152 (Add Urey-Bradley plug-in (#82))

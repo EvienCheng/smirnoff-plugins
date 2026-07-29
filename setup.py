@@ -40,34 +40,26 @@ setup(
     entry_points={
         "openff.toolkit.plugins.handlers": [
             "UreyBradleyHandler = smirnoff_plugins.handlers.valence:UreyBradleyHandler",
-<<<<<<< HEAD
             "HarmonicHeightHandler = smirnoff_plugins.handlers.valence:HarmonicHeightHandler",
             "LeeKrimmHandler = smirnoff_plugins.handlers.valence:LeeKrimmHandler",
             "HarmonicAngleHandler = smirnoff_plugins.handlers.valence:HarmonicAngleHandler",
-=======
->>>>>>> b69a152 (Add Urey-Bradley plug-in (#82))
             "DampedBuckingham68Handler = smirnoff_plugins.handlers.nonbonded:DampedBuckingham68Handler",
             "DoubleExponentialHandler = smirnoff_plugins.handlers.nonbonded:DoubleExponentialHandler",
             "DampedExp6810Handler = smirnoff_plugins.handlers.nonbonded:DampedExp6810Handler",
             "AxilrodTellerHandler = smirnoff_plugins.handlers.nonbonded:AxilrodTellerHandler",
             "MultipoleHandler = smirnoff_plugins.handlers.nonbonded:MultipoleHandler",
-            "HarmonicHeightHandler = smirnoff_plugins.handlers.bonded:HarmonicHeightHandler",
             "DoubleExponentialVirtualSiteHandler = smirnoff_plugins.handlers.vsites:DoubleExponentialVirtualSiteHandler",
         ],
         "openff.interchange.plugins.collections": [
             "SMIRNOFFUreyBradleyCollection = smirnoff_plugins.collections.valence:SMIRNOFFUreyBradleyCollection",
-<<<<<<< HEAD
             "SMIRNOFFHarmonicHeightCollection = smirnoff_plugins.collections.valence:SMIRNOFFHarmonicHeightCollection",
             "SMIRNOFFLeeKrimmCollection = smirnoff_plugins.collections.valence:SMIRNOFFLeeKrimmCollection",
             "SMIRNOFFHarmonicAngleCollection = smirnoff_plugins.collections.valence:SMIRNOFFHarmonicAngleCollection",
-=======
->>>>>>> b69a152 (Add Urey-Bradley plug-in (#82))
             "SMIRNOFFDampedBuckingham68Collection = smirnoff_plugins.collections.nonbonded:SMIRNOFFDampedBuckingham68Collection",
             "DoubleExponentialCollection = smirnoff_plugins.collections.nonbonded:SMIRNOFFDoubleExponentialCollection",
             "SMIRNOFFDampedExp6810Collection = smirnoff_plugins.collections.nonbonded:SMIRNOFFDampedExp6810Collection",
             "SMIRNOFFAxilrodTellerCollection = smirnoff_plugins.collections.nonbonded:SMIRNOFFAxilrodTellerCollection",
             "SMIRNOFFMultipoleCollection = smirnoff_plugins.collections.nonbonded:SMIRNOFFMultipoleCollection",
-            "HarmonicHeightCollection = smirnoff_plugins.collections.bonded:HarmonicHeightCollection",
             "SMIRNOFFDoubleExponentialVirtualSiteCollection = smirnoff_plugins.collections.vsites:SMIRNOFFDoubleExponentialVirtualSiteCollection",
         ],
     },

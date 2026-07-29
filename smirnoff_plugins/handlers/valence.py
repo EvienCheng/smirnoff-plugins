@@ -1,8 +1,5 @@
 from openff.toolkit import unit
-<<<<<<< HEAD
 from openff.toolkit.topology import ImproperDict
-=======
->>>>>>> b69a152 (Add Urey-Bradley plug-in (#82))
 from openff.toolkit.typing.engines.smirnoff.parameters import (
     ConstraintHandler,
     ParameterAttribute,
@@ -24,7 +21,6 @@ class UreyBradleyHandler(ParameterHandler):
         )
         length = ParameterAttribute(default=None, unit=unit.nanometers)
 
-<<<<<<< HEAD
     _TAGNAME = "UreyBradley"
     _INFOTYPE = UreyBradleyType
     _DEPENDENCIES = [ConstraintHandler]
@@ -95,8 +91,3 @@ class LeeKrimmHandler(ParameterHandler):
         return self._find_matches(
             entity, transformed_dict_cls=ImproperDict, unique=unique
         )
-=======
-    _TAGNAME = "UreyBradleys"
-    _INFOTYPE = UreyBradleyType
-    _DEPENDENCIES = [ConstraintHandler]
->>>>>>> b69a152 (Add Urey-Bradley plug-in (#82))
